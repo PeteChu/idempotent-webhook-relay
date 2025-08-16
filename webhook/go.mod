@@ -2,7 +2,10 @@ module github.com/petechu/idempotent-webhook-relay
 
 go 1.24.5
 
-require github.com/gin-gonic/gin v1.10.1
+require (
+	github.com/gin-gonic/gin v1.10.1
+	github.com/stripe/stripe-go/v82 v82.4.1
+)
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

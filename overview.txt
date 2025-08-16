@@ -1,4 +1,0 @@
-Name: Idempotent Webhook Relay
-Build: Receive Stripe test webhooks, store idempotency keys, retry with backoff to downstream “consumer” services, dead-letter UI.
-Stack: Go + Gin, outbox table, SQS/RabbitMQ, small Next.js dashboard.
-Showcase: exactly-once semantics, backpressure, outbox pattern, tracing with OpenTelemetry.

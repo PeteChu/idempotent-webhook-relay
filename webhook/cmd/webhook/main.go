@@ -11,18 +11,22 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/petechu/idempotent-webhook-relay/internal/handler"
+	"github.com/petechu/idempotent-webhook-relay/internal/svc"
 )
 
 func main() {
-	r := gin.New()
+	router := gin.New()
 
-	r.GET("/healthz", func(c *gin.Context) {
-		c.String(200, "OK")
-	})
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
+	svcCtx := svc.NewServiceContext()
+	handler.RegisterRoutes(router, svcCtx)
 
 	server := http.Server{
 		Addr:    ":3000",
-		Handler: r,
+		Handler: router,
 	}
 
 	ch := make(chan os.Signal, 1)
