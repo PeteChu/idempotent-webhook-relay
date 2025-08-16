@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./tmp/main"
-cmd = "go build -o ./tmp/main ./cmd/webhook"
+cmd = "go build -o ./tmp/main ."
 delay = 1000
 exclude_dir = ["assets", "tmp", "vendor", "testdata"]
 exclude_file = []
@@ -40,7 +40,7 @@ silent = false
 time = false
 
 [misc]
-clean_on_exit = false
+clean_on_exit = true
 
 [proxy]
 app_port = 0

@@ -9,18 +9,13 @@ import (
 	"context"
 )
 
-const insertOutboxEvent = `-- name: InsertOutboxEvent :one
-INSERT INTO outbox (event_id, payload) VALUES ($1, $2)
-RETURNING id, event_id, payload, status, retry_count, last_error, last_attempt_at, created_at, updated_at
+const getOutBoxEvent = `-- name: GetOutBoxEvent :one
+SELECT id, event_id, payload, status, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
+WHERE event_id = $1
 `
 
-type InsertOutboxEventParams struct {
-	EventID string
-	Payload []byte
-}
-
-func (q *Queries) InsertOutboxEvent(ctx context.Context, arg InsertOutboxEventParams) (Outbox, error) {
-	row := q.db.QueryRow(ctx, insertOutboxEvent, arg.EventID, arg.Payload)
+func (q *Queries) GetOutBoxEvent(ctx context.Context, eventID string) (Outbox, error) {
+	row := q.db.QueryRow(ctx, getOutBoxEvent, eventID)
 	var i Outbox
 	err := row.Scan(
 		&i.ID,
@@ -34,6 +29,23 @@ func (q *Queries) InsertOutboxEvent(ctx context.Context, arg InsertOutboxEventPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const insertOutboxEvent = `-- name: InsertOutboxEvent :one
+INSERT INTO outbox (event_id, payload) VALUES ($1, $2)
+RETURNING id
+`
+
+type InsertOutboxEventParams struct {
+	EventID string
+	Payload []byte
+}
+
+func (q *Queries) InsertOutboxEvent(ctx context.Context, arg InsertOutboxEventParams) (int32, error) {
+	row := q.db.QueryRow(ctx, insertOutboxEvent, arg.EventID, arg.Payload)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const listPendingEvents = `-- name: ListPendingEvents :many

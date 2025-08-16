@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 CREATE TYPE outbox_status AS ENUM ('pending', 'processed', 'failed');
 
 CREATE TABLE outbox (
@@ -11,3 +13,10 @@ CREATE TABLE outbox (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS outbox;
+DROP TYPE IF EXISTS outbox_status;
+-- +goose StatementEnd
