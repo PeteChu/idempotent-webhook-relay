@@ -5,6 +5,7 @@ CREATE TYPE outbox_status AS ENUM ('pending', 'processed', 'failed');
 CREATE TABLE outbox (
     id SERIAL PRIMARY KEY,
     event_id TEXT NOT NULL UNIQUE,
+    type TEXT NOT NULL,
     payload JSONB NOT NULL,
     status outbox_status NOT NULL DEFAULT 'pending',
     retry_count INTEGER NOT NULL DEFAULT 0,

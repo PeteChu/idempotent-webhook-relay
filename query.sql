@@ -7,6 +7,6 @@ SELECT * FROM outbox
 WHERE status = 'pending';
 
 -- name: InsertOutboxEvent :one
-INSERT INTO outbox (event_id, payload) VALUES ($1, $2)
+INSERT INTO outbox (event_id, type, payload) VALUES ($1, $2, $3)
 RETURNING id;
 

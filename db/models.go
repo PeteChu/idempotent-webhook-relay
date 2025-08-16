@@ -57,6 +57,7 @@ func (ns NullOutboxStatus) Value() (driver.Value, error) {
 type Outbox struct {
 	ID            int32
 	EventID       string
+	Type          string
 	Payload       []byte
 	Status        OutboxStatus
 	RetryCount    int32
