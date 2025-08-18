@@ -8,6 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.24.3
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stripe/stripe-go/v82 v82.4.1
 )
 

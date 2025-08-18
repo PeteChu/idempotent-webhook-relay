@@ -76,8 +76,8 @@ func main() {
 	fmt.Println("Server shut down successfully.")
 }
 
-func migrate(ctx context.Context, dbUrl string) error {
-	db, err := sql.Open("pgx", dbUrl)
+func migrate(ctx context.Context, dbURL string) error {
+	db, err := sql.Open("pgx", dbURL)
 	if err != nil {
 		log.Fatalf("Unable to open database connection: %v\n", err)
 	}
