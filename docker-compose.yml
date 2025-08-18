@@ -1,0 +1,42 @@
+services:
+  webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: idempotent-webhook-relay
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      GIN_MODE: release
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    networks:
+      - privacy-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    ports:
+      - 5432
+    networks:
+      - privacy-network
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: idempotent-webhook-relay
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d idempotent-webhook-relay"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  privacy-network:
+    driver: bridge

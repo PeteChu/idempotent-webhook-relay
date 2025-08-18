@@ -32,7 +32,7 @@ func main() {
 
 	ctx := context.Background()
 
-	conn, err := pgx.Connect(ctx, "postgres://localhost:5432/idempotent-webhook-relay")
+	conn, err := pgx.Connect(ctx, cfg.DatabaseURL())
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
