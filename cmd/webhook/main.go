@@ -2,19 +2,24 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/petechu/idempotent-webhook-relay/internal/config"
+	"github.com/petechu/idempotent-webhook-relay/internal/db/migrations"
 	"github.com/petechu/idempotent-webhook-relay/internal/handler"
 	"github.com/petechu/idempotent-webhook-relay/internal/svc"
+	"github.com/pressly/goose/v3"
 )
 
 func main() {
@@ -37,6 +42,10 @@ func main() {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close(ctx)
+
+	if err := migrate(ctx, cfg.DatabaseURL()); err != nil {
+		log.Fatalf("Migration failed: %v\n", err)
+	}
 
 	svcCtx := svc.NewServiceContext(cfg, conn)
 	handler.RegisterRoutes(router, svcCtx)
@@ -65,4 +74,31 @@ func main() {
 		log.Fatalf("Error closing server: %v\n", err)
 	}
 	fmt.Println("Server shut down successfully.")
+}
+
+func migrate(ctx context.Context, dbUrl string) error {
+	db, err := sql.Open("pgx", dbUrl)
+	if err != nil {
+		log.Fatalf("Unable to open database connection: %v\n", err)
+	}
+
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, migrations.Embed)
+	if err != nil {
+		return err
+	}
+
+	sources := provider.ListSources()
+	for _, s := range sources {
+		log.Printf("%-3s %-2v %v\n", s.Type, s.Version, filepath.Base(s.Path))
+	}
+
+	results, err := provider.Up(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range results {
+		log.Printf("%-3s %-2v done: %v\n", r.Source.Type, r.Source.Version, r.Duration)
+	}
+
+	return nil
 }

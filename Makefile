@@ -1,6 +1,6 @@
 # --- Config ---
 dsn ?= "host=localhost port=5432 user=postgres password=postgres dbname=idempotent-webhook-relay sslmode=disable"
-migrationPath ?= "./db/migrations"
+migrationPath ?= "./internal/db/migrations"
 
 
 db-status:
