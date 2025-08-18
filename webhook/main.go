@@ -12,11 +12,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/petechu/idempotent-webhook-relay/webhook/internal/config"
 	"github.com/petechu/idempotent-webhook-relay/webhook/internal/handler"
 	"github.com/petechu/idempotent-webhook-relay/webhook/internal/svc"
 )
 
 func main() {
+	var cfg *config.Config
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Unable to load config: %v\n", err)
+	}
+
 	router := gin.New()
 
 	router.Use(gin.Logger())
@@ -30,7 +38,7 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	svcCtx := svc.NewServiceContext(conn)
+	svcCtx := svc.NewServiceContext(cfg, conn)
 	handler.RegisterRoutes(router, svcCtx)
 
 	server := http.Server{

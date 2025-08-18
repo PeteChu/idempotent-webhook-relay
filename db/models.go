@@ -60,6 +60,7 @@ type Outbox struct {
 	Type          string
 	Payload       []byte
 	Status        OutboxStatus
+	Provider      string
 	RetryCount    int32
 	LastError     pgtype.Text
 	LastAttemptAt pgtype.Timestamptz

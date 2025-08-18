@@ -9,5 +9,5 @@ func RegisterRoutes(r *gin.Engine, svcCtx *svc.ServiceContext) {
 	r.Use(CORS())
 
 	r.GET("/healthz", healthCheckHandler(svcCtx))
-	r.POST("/webhook", webhookHandler(svcCtx))
+	r.POST("/stripe/webhook", stripeWebhookHandler(svcCtx))
 }

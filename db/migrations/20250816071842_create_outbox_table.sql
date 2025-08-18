@@ -8,6 +8,7 @@ CREATE TABLE outbox (
     type TEXT NOT NULL,
     payload JSONB NOT NULL,
     status outbox_status NOT NULL DEFAULT 'pending',
+    provider TEXT NOT NULL,
     retry_count INTEGER NOT NULL DEFAULT 0,
     last_error TEXT,
     last_attempt_at TIMESTAMPTZ,

@@ -36,9 +36,10 @@ func (l *StoreStripeEventLogic) StoreStripeEvent(event stripe.Event) error {
 
 	// Store the event in the outbox
 	if _, err := l.svc.OutboxDB.InsertOutboxEvent(l.ctx, db.InsertOutboxEventParams{
-		EventID: event.ID,
-		Type:    string(event.Type),
-		Payload: payload,
+		EventID:  event.ID,
+		Type:     string(event.Type),
+		Payload:  payload,
+		Provider: "stripe",
 	}); err != nil {
 		return err
 	}

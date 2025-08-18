@@ -1,24 +1,44 @@
 package handler
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/petechu/idempotent-webhook-relay/webhook/internal/logic"
 	"github.com/petechu/idempotent-webhook-relay/webhook/internal/svc"
-	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/webhook"
 )
 
-func webhookHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
+func stripeWebhookHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		event := stripe.Event{}
-		if err := c.ShouldBindBodyWithJSON(&event); err != nil {
-			c.JSON(400, gin.H{
-				"message": "Invalid request body",
+		const MaxBodyBytes = int64(65536)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MaxBodyBytes)
+
+		payload, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			fmt.Println("Error reading request body:", err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"message": "Error reading request body",
+			})
+			return
+		}
+
+		signature := c.GetHeader("Stripe-Signature")
+		event, err := webhook.ConstructEvent(payload, signature, svcCtx.Config.StripeWebhookSecret)
+		if err != nil {
+			fmt.Println("Error verifying webhook signature:", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Invalid signature",
 			})
 			return
 		}
 
 		l := logic.NewStoreStripeEventLogic(c.Request.Context(), svcCtx)
 		l.StoreStripeEvent(event)
+
 		c.JSON(200, gin.H{
 			"message": "Webhook received",
 		})

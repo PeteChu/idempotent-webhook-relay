@@ -10,7 +10,7 @@ import (
 )
 
 const getOutBoxEvent = `-- name: GetOutBoxEvent :one
-SELECT id, event_id, type, payload, status, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
+SELECT id, event_id, type, payload, status, provider, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
 WHERE event_id = $1
 `
 
@@ -23,6 +23,7 @@ func (q *Queries) GetOutBoxEvent(ctx context.Context, eventID string) (Outbox, e
 		&i.Type,
 		&i.Payload,
 		&i.Status,
+		&i.Provider,
 		&i.RetryCount,
 		&i.LastError,
 		&i.LastAttemptAt,
@@ -33,25 +34,31 @@ func (q *Queries) GetOutBoxEvent(ctx context.Context, eventID string) (Outbox, e
 }
 
 const insertOutboxEvent = `-- name: InsertOutboxEvent :one
-INSERT INTO outbox (event_id, type, payload) VALUES ($1, $2, $3)
+INSERT INTO outbox (event_id, type, payload, provider) VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type InsertOutboxEventParams struct {
-	EventID string
-	Type    string
-	Payload []byte
+	EventID  string
+	Type     string
+	Payload  []byte
+	Provider string
 }
 
 func (q *Queries) InsertOutboxEvent(ctx context.Context, arg InsertOutboxEventParams) (int32, error) {
-	row := q.db.QueryRow(ctx, insertOutboxEvent, arg.EventID, arg.Type, arg.Payload)
+	row := q.db.QueryRow(ctx, insertOutboxEvent,
+		arg.EventID,
+		arg.Type,
+		arg.Payload,
+		arg.Provider,
+	)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
 }
 
 const listPendingEvents = `-- name: ListPendingEvents :many
-SELECT id, event_id, type, payload, status, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
+SELECT id, event_id, type, payload, status, provider, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
 WHERE status = 'pending'
 `
 
@@ -70,6 +77,7 @@ func (q *Queries) ListPendingEvents(ctx context.Context) ([]Outbox, error) {
 			&i.Type,
 			&i.Payload,
 			&i.Status,
+			&i.Provider,
 			&i.RetryCount,
 			&i.LastError,
 			&i.LastAttemptAt,
