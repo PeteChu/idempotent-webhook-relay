@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/logic"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/svc"
+	"github.com/petechu/idempotent-webhook-relay/internal/logic"
+	"github.com/petechu/idempotent-webhook-relay/internal/svc"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 

@@ -12,9 +12,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/config"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/handler"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/svc"
+	"github.com/petechu/idempotent-webhook-relay/internal/config"
+	"github.com/petechu/idempotent-webhook-relay/internal/handler"
+	"github.com/petechu/idempotent-webhook-relay/internal/svc"
 )
 
 func main() {

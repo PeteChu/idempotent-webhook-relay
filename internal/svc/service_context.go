@@ -2,8 +2,8 @@ package svc
 
 import (
 	"github.com/jackc/pgx/v5"
-	"github.com/petechu/idempotent-webhook-relay/db"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/config"
+	"github.com/petechu/idempotent-webhook-relay/internal/config"
+	"github.com/petechu/idempotent-webhook-relay/internal/db"
 )
 
 type ServiceContext struct {

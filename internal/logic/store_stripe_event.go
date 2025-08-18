@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/petechu/idempotent-webhook-relay/db"
-	"github.com/petechu/idempotent-webhook-relay/webhook/internal/svc"
+	"github.com/petechu/idempotent-webhook-relay/internal/db"
+	"github.com/petechu/idempotent-webhook-relay/internal/svc"
 	"github.com/stripe/stripe-go/v82"
 )
 
