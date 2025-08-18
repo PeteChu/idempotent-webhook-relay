@@ -9,6 +9,8 @@ services:
       DB_NAME: idempotent-webhook-relay
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      STRIPE_SECRET_KEY: xxx
+      STRIPE_WEBHOOK_SECRET: xxx
       GIN_MODE: release
     ports:
       - 3000:3000

@@ -12,7 +12,7 @@ COPY . .
 
 ENV CGO_ENABLED=0
 
-RUN go build -ldflags="-w -s" -o webhook ./webhook
+RUN go build -ldflags="-w -s" -o webhook ./cmd/webhook
 
 FROM alpine:latest as prod
 
