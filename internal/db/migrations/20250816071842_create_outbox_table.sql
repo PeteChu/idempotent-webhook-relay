@@ -1,13 +1,11 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TYPE outbox_status AS ENUM ('pending', 'processed', 'failed');
-
 CREATE TABLE outbox (
     id SERIAL PRIMARY KEY,
     event_id TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL,
     payload JSONB NOT NULL,
-    status outbox_status NOT NULL DEFAULT 'pending',
+    status TEXT,
     provider TEXT NOT NULL,
     retry_count INTEGER NOT NULL DEFAULT 0,
     last_error TEXT,
@@ -20,5 +18,4 @@ CREATE TABLE outbox (
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS outbox;
-DROP TYPE IF EXISTS outbox_status;
 -- +goose StatementEnd

@@ -5,61 +5,15 @@
 package db
 
 import (
-	"database/sql/driver"
-	"fmt"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-type OutboxStatus string
-
-const (
-	OutboxStatusPending   OutboxStatus = "pending"
-	OutboxStatusProcessed OutboxStatus = "processed"
-	OutboxStatusFailed    OutboxStatus = "failed"
-)
-
-func (e *OutboxStatus) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = OutboxStatus(s)
-	case string:
-		*e = OutboxStatus(s)
-	default:
-		return fmt.Errorf("unsupported scan type for OutboxStatus: %T", src)
-	}
-	return nil
-}
-
-type NullOutboxStatus struct {
-	OutboxStatus OutboxStatus
-	Valid        bool // Valid is true if OutboxStatus is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullOutboxStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.OutboxStatus, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.OutboxStatus.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullOutboxStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.OutboxStatus), nil
-}
 
 type Outbox struct {
 	ID            int32
 	EventID       string
 	Type          string
 	Payload       []byte
-	Status        OutboxStatus
+	Status        pgtype.Text
 	Provider      string
 	RetryCount    int32
 	LastError     pgtype.Text

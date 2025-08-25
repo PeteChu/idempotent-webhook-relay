@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,8 @@ import (
 )
 
 func main() {
-	q, err := queue.NewQueue("amqp://guest:guest@localhost:5672/")
+	ctx := context.Background()
+	q, err := queue.NewQueue(ctx, "amqp://guest:guest@localhost:5672/")
 	if err != nil {
 		log.Panicf("Failed to create a new queue: %s", err)
 	}

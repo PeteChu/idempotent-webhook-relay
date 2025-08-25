@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getOutBoxEvent = `-- name: GetOutBoxEvent :one
@@ -57,13 +59,12 @@ func (q *Queries) InsertOutboxEvent(ctx context.Context, arg InsertOutboxEventPa
 	return id, err
 }
 
-const listPendingEvents = `-- name: ListPendingEvents :many
+const listEvents = `-- name: ListEvents :many
 SELECT id, event_id, type, payload, status, provider, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
-WHERE status = 'pending'
 `
 
-func (q *Queries) ListPendingEvents(ctx context.Context) ([]Outbox, error) {
-	rows, err := q.db.Query(ctx, listPendingEvents)
+func (q *Queries) ListEvents(ctx context.Context) ([]Outbox, error) {
+	rows, err := q.db.Query(ctx, listEvents)
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +93,105 @@ func (q *Queries) ListPendingEvents(ctx context.Context) ([]Outbox, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const listFailedEvents = `-- name: ListFailedEvents :many
+SELECT id, event_id, type, payload, status, provider, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
+WHERE status = 'failed'
+`
+
+func (q *Queries) ListFailedEvents(ctx context.Context) ([]Outbox, error) {
+	rows, err := q.db.Query(ctx, listFailedEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Outbox
+	for rows.Next() {
+		var i Outbox
+		if err := rows.Scan(
+			&i.ID,
+			&i.EventID,
+			&i.Type,
+			&i.Payload,
+			&i.Status,
+			&i.Provider,
+			&i.RetryCount,
+			&i.LastError,
+			&i.LastAttemptAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnprocessedEvents = `-- name: ListUnprocessedEvents :many
+SELECT id, event_id, type, payload, status, provider, retry_count, last_error, last_attempt_at, created_at, updated_at FROM outbox
+WHERE COALESCE(status, '') NOT IN ('pending', 'processed')
+AND type = ANY($1::varchar[])
+`
+
+func (q *Queries) ListUnprocessedEvents(ctx context.Context, dollar_1 []string) ([]Outbox, error) {
+	rows, err := q.db.Query(ctx, listUnprocessedEvents, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Outbox
+	for rows.Next() {
+		var i Outbox
+		if err := rows.Scan(
+			&i.ID,
+			&i.EventID,
+			&i.Type,
+			&i.Payload,
+			&i.Status,
+			&i.Provider,
+			&i.RetryCount,
+			&i.LastError,
+			&i.LastAttemptAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateOutboxEvent = `-- name: UpdateOutboxEvent :exec
+UPDATE outbox 
+SET 
+  status = $2,
+  last_error = $3,
+  last_attempt_at = $4
+WHERE id = $1
+`
+
+type UpdateOutboxEventParams struct {
+	ID            int32
+	Status        pgtype.Text
+	LastError     pgtype.Text
+	LastAttemptAt pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateOutboxEvent(ctx context.Context, arg UpdateOutboxEventParams) error {
+	_, err := q.db.Exec(ctx, updateOutboxEvent,
+		arg.ID,
+		arg.Status,
+		arg.LastError,
+		arg.LastAttemptAt,
+	)
+	return err
 }

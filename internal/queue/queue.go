@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,9 +10,10 @@ import (
 
 type Queue struct {
 	amqp091.Queue
+	Context    context.Context
 	Connection *amqp091.Connection
 	Channel    *amqp091.Channel
-	Close      func() error
+	Close      func()
 }
 
 type Options struct {
@@ -25,7 +27,7 @@ type Options struct {
 
 type Option func(*Options)
 
-func NewQueue(url string, opts ...Option) (*Queue, error) {
+func NewQueue(ctx context.Context, url string, opts ...Option) (*Queue, error) {
 	conn, err := amqp091.Dial(url)
 	if err != nil {
 		return nil, err
@@ -61,10 +63,11 @@ func NewQueue(url string, opts ...Option) (*Queue, error) {
 	}
 
 	return &Queue{
+		Context:    ctx,
 		Queue:      q,
 		Connection: conn,
 		Channel:    ch,
-		Close: func() error {
+		Close: func() {
 			var errs error
 			if err := ch.Close(); err != nil {
 				errs = errors.Join(errs, fmt.Errorf("failed to close channel: %w", err))
@@ -72,9 +75,22 @@ func NewQueue(url string, opts ...Option) (*Queue, error) {
 			if err := conn.Close(); err != nil {
 				errs = errors.Join(errs, fmt.Errorf("failed to close connection: %w", err))
 			}
-			return errs
+			if errs != nil {
+				fmt.Println("Queue close error:", errs)
+			}
 		},
 	}, nil
+}
+
+func (q *Queue) Publish(body []byte) error {
+	if err := q.Channel.PublishWithContext(q.Context, "", q.Name, false, false, amqp091.Publishing{
+		DeliveryMode: amqp091.Persistent,
+		ContentType:  "text/plain",
+		Body:         body,
+	}); err != nil {
+		return fmt.Errorf("failed to publish message: %w", err)
+	}
+	return nil
 }
 
 func WithConfig(opts Options) Option {

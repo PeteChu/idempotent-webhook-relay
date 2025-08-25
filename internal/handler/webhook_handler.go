@@ -37,7 +37,13 @@ func stripeWebhookHandler(svcCtx *svc.ServiceContext) gin.HandlerFunc {
 		}
 
 		l := logic.NewStoreStripeEventLogic(c.Request.Context(), svcCtx)
-		l.StoreStripeEvent(event)
+		if err := l.StoreStripeEvent(event); err != nil {
+			fmt.Println("Error storing event:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": fmt.Sprintf("Failed to store event: %s", err),
+			})
+			return
+		}
 
 		c.JSON(200, gin.H{
 			"message": "Webhook received",

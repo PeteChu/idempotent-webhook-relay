@@ -41,7 +41,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer conn.Close(ctx)
+	defer func() {
+		if err := conn.Close(ctx); err != nil {
+			log.Printf("Error closing database connection: %v\n", err)
+		}
+	}()
 
 	if err := migrate(ctx, cfg.DatabaseURL()); err != nil {
 		log.Fatalf("Migration failed: %v\n", err)
